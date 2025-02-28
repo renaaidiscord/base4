@@ -116,7 +116,7 @@
       background-color: #333333;
     }
 
-    /* Visor de archivos */
+
     .viewer {
       margin-top: 20px;
     }
@@ -140,7 +140,7 @@
   </style>
 </head>
 <body>
-  <!-- Página de Login -->
+
   <div class="login-container" id="loginContainer">
     <h2>Iniciar Sesión</h2>
     <form id="loginForm">
@@ -157,7 +157,7 @@
     <p id="error-message" class="error-message"></p>
   </div>
 
-  <!-- Página de Dashboard (oculta inicialmente) -->
+
   <div class="dashboard-container" id="dashboardContainer" style="display: none;">
     <h2>Panel de Control</h2>
     <div class="file-explorer">
@@ -172,16 +172,16 @@
   </div>
 
   <script>
-    // Credenciales válidas (esto es solo un ejemplo, no es seguro)
+
     const validUsername = 'Rena';
     const validPassword = 'q@wdAA-45wMjD';
 
-    // Verificar autenticación al cargar la página
+
     if (localStorage.getItem('isAuthenticated') === 'true') {
       showDashboard();
     }
 
-    // Lógica de login
+
     document.getElementById('loginForm')?.addEventListener('submit', function (e) {
       e.preventDefault();
 
@@ -196,53 +196,67 @@
       }
     });
 
-    // Mostrar el dashboard
+
     function showDashboard() {
       document.getElementById('loginContainer').style.display = 'none';
       document.getElementById('dashboardContainer').style.display = 'block';
       loadFiles();
     }
 
-    // Cargar archivos desde la carpeta /dir/
-    function loadFiles() {
+
+    async function loadFilesFromGitHub() {
       const fileList = document.getElementById('file-list');
-      fileList.innerHTML = '';
+      fileList.innerHTML = 'Cargando archivos...';
 
-      // Simulación de lista de archivos (reemplaza con una llamada a tu API o repositorio)
-      const files = [
-        { name: 'imagen1.jpg', type: 'image' },
-        { name: 'video1.mp4', type: 'video' },
-        { name: 'documento.pdf', type: 'document' },
-      ];
 
-      files.forEach(file => {
-        const li = document.createElement('li');
-        li.textContent = file.name;
-        li.addEventListener('click', () => openFile(file));
-        fileList.appendChild(li);
-      });
+      const usuario = 'renaaidiscord';
+      const repositorio = 'base4';
+      const ruta = 'dir';
+
+      try {
+        const response = await fetch(`https://api.github.com/repos/${usuario}/${repositorio}/contents/${ruta}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          fileList.innerHTML = '';
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.name;
+            li.addEventListener('click', () => openFile(item));
+            fileList.appendChild(li);
+          });
+        } else {
+          fileList.innerHTML = 'Error al cargar los archivos.';
+        }
+      } catch (error) {
+        fileList.innerHTML = 'Error al conectar con GitHub.';
+      }
     }
 
-    // Abrir archivo en el visor
+
     function openFile(file) {
       const viewerContent = document.getElementById('viewer-content');
       viewerContent.innerHTML = '';
 
-      if (file.type === 'image') {
-        const img = document.createElement('img');
-        img.src = `https://tu-usuario.github.io/mi-repositorio/dir/${file.name}`;
-        viewerContent.appendChild(img);
-      } else if (file.type === 'video') {
-        const video = document.createElement('video');
-        video.src = `https://tu-usuario.github.io/mi-repositorio/dir/${file.name}`;
-        video.controls = true;
-        viewerContent.appendChild(video);
-      } else {
-        viewerContent.textContent = 'Tipo de archivo no compatible.';
+      if (file.type === 'file') {
+        if (file.name.endsWith('.jpg') || file.name.endsWith('.png') || file.name.endsWith('.jpeg')) {
+          const img = document.createElement('img');
+          img.src = file.download_url;
+          viewerContent.appendChild(img);
+        } else if (file.name.endsWith('.mp4') || file.name.endsWith('.webm')) {
+          const video = document.createElement('video');
+          video.src = file.download_url;
+          video.controls = true;
+          viewerContent.appendChild(video);
+        } else {
+          viewerContent.textContent = 'Tipo de archivo no compatible.';
+        }
+      } else if (file.type === 'dir') {
+        viewerContent.textContent = 'Selecciona un archivo, no un directorio.';
       }
     }
 
-    // Cerrar sesión
+
     function logout() {
       localStorage.removeItem('isAuthenticated');
       window.location.reload();
