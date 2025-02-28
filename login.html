@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base4 - Deadmoon</title>
+  <style>
+    /* Estilos generales */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Contenedor de login y dashboard */
+    .login-container, .dashboard-container {
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+
+    /* Estilos para los inputs y botones */
+    .input-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #cccccc;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      border: 1px solid #333333;
+      border-radius: 6px;
+      background-color: #2c2c2c;
+      color: #ffffff;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #28a745;
+      outline: none;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    /* Mensaje de error */
+    .error-message {
+      color: #ff4444;
+      margin-top: 10px;
+      animation: slideIn 0.3s ease-in-out;
+    }
+
+    /* Explorador de archivos */
+    .file-explorer {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .file-explorer ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .file-explorer li {
+      padding: 10px;
+      border-bottom: 1px solid #333333;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .file-explorer li:hover {
+      background-color: #333333;
+    }
+
+    /* Visor de archivos */
+    .viewer {
+      margin-top: 20px;
+    }
+
+    .viewer img, .viewer video {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Botón de cerrar sesión */
+    .logout-button {
+      background-color: #dc3545;
+      margin-top: 20px;
+    }
+
+    .logout-button:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <!-- Página de Login -->
+  <div class="login-container" id="loginContainer">
+    <h2>Login - Base4</h2>
+    <form id="loginForm">
+      <div class="input-group">
+        <label for="username">User:</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      <div class="input-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit">Log In</button>
+    </form>
+    <p id="error-message" class="error-message"></p>
+  </div>
+
+  <!-- Página de Dashboard (oculta inicialmente) -->
+  <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+    <h2>Dashboard</h2>
+    <div class="file-explorer">
+      <h3>File Explorer</h3>
+      <ul id="file-list"></ul>
+    </div>
+    <div class="viewer" id="viewer">
+      <h3>Viewer</h3>
+      <div id="viewer-content"></div>
+    </div>
+    <button class="logout-button" onclick="logout()">Log Out</button>
+  </div>
+
+  <script>
+
+    const validUsernameHash = '9f2c5e7b7a1c1f8e7a7b7a1c1f8e7a7b7a1c1f8e7a7b7a1c1f8e7a7b7a1c1f8e';
+    const validPasswordHash = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'; 
+    
+    async function hashString(str) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
+
+    if (localStorage.getItem('isAuthenticated') === 'true') {
+      showDashboard();
+    }
+
+    document.getElementById('loginForm')?.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      const usernameHash = await hashString(username);
+      const passwordHash = await hashString(password);
+
+      if (usernameHash === validUsernameHash && passwordHash === validPasswordHash) {
+        localStorage.setItem('isAuthenticated', 'true');
+        showDashboard();
+      } else {
+        document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos';
+      }
+    });
+
+
+    function showDashboard() {
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('dashboardContainer').style.display = 'block';
+      loadFilesFromGitHub();
+    }
+
+    async function loadFilesFromGitHub() {
+      const fileList = document.getElementById('file-list');
+      fileList.innerHTML = 'Cargando archivos...';
+
+      // Reemplaza con tu usuario y nombre del repositorio
+      const usuario = 'renaaidiscord';
+      const repositorio = 'base4';
+      const ruta = 'dir'; // Carpeta dentro del repositorio
+
+      try {
+        const response = await fetch(`https://api.github.com/repos/${usuario}/${repositorio}/contents/${ruta}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          fileList.innerHTML = '';
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.name;
+            li.addEventListener('click', () => openFile(item));
+            fileList.appendChild(li);
+          });
+        } else {
+          fileList.innerHTML = 'Error al cargar los archivos.';
+        }
+      } catch (error) {
+        fileList.innerHTML = 'Error al conectar con GitHub.';
+      }
+    }
+
+    // Abrir archivo en el visor
+    function openFile(file) {
+      const viewerContent = document.getElementById('viewer-content');
+      viewerContent.innerHTML = '';
+
+      if (file.type === 'file') {
+        if (file.name.endsWith('.jpg') || file.name.endsWith('.png') || file.name.endsWith('.jpeg')) {
+          const img = document.createElement('img');
+          img.src = file.download_url;
+          viewerContent.appendChild(img);
+        } else if (file.name.endsWith('.mp4') || file.name.endsWith('.webm')) {
+          const video = document.createElement('video');
+          video.src = file.download_url;
+          video.controls = true;
+          viewerContent.appendChild(video);
+        } else {
+          viewerContent.textContent = 'Tipo de archivo no compatible.';
+        }
+      } else if (file.type === 'dir') {
+        viewerContent.textContent = 'Selecciona un archivo, no un directorio.';
+      }
+    }
+
+    // Cerrar sesión
+    function logout() {
+      localStorage.removeItem('isAuthenticated');
+      window.location.reload();
+    }
+  </script>
+</body>
+</html>
