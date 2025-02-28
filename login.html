@@ -172,16 +172,9 @@
   </div>
 
   <script>
-    const validUsernameHash = '9f2c5e7b7a1c1f8e7a7b7a1c1f8e7a7b7a1c1f8e7a7b7a1c1f8e7a7b7a1c1f8e'; 
-    const validPasswordHash = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b';
-    async function hashString(str) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(str);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-      return hashHex;
-    }
+    // Credenciales válidas (esto es solo un ejemplo, no es seguro)
+    const validUsername = 'Rena';
+    const validPassword = 'q@wdAA-45wMjD';
 
     // Verificar autenticación al cargar la página
     if (localStorage.getItem('isAuthenticated') === 'true') {
@@ -189,18 +182,13 @@
     }
 
     // Lógica de login
-    document.getElementById('loginForm')?.addEventListener('submit', async function (e) {
+    document.getElementById('loginForm')?.addEventListener('submit', function (e) {
       e.preventDefault();
 
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
-      // Hashear las credenciales ingresadas
-      const usernameHash = await hashString(username);
-      const passwordHash = await hashString(password);
-
-      // Comparar con los hashes válidos
-      if (usernameHash === validUsernameHash && passwordHash === validPasswordHash) {
+      if (username === validUsername && password === validPassword) {
         localStorage.setItem('isAuthenticated', 'true');
         showDashboard();
       } else {
@@ -212,37 +200,27 @@
     function showDashboard() {
       document.getElementById('loginContainer').style.display = 'none';
       document.getElementById('dashboardContainer').style.display = 'block';
-      loadFilesFromGitHub();
+      loadFiles();
     }
 
-    // Cargar archivos desde la carpeta /dir/ de GitHub
-    async function loadFilesFromGitHub() {
+    // Cargar archivos desde la carpeta /dir/
+    function loadFiles() {
       const fileList = document.getElementById('file-list');
-      fileList.innerHTML = 'Cargando archivos...';
+      fileList.innerHTML = '';
 
-      // Reemplaza con tu usuario y nombre del repositorio
-      const usuario = 'tu-usuario';
-      const repositorio = 'mi-repositorio';
-      const ruta = 'dir'; // Carpeta dentro del repositorio
+      // Simulación de lista de archivos (reemplaza con una llamada a tu API o repositorio)
+      const files = [
+        { name: 'imagen1.jpg', type: 'image' },
+        { name: 'video1.mp4', type: 'video' },
+        { name: 'documento.pdf', type: 'document' },
+      ];
 
-      try {
-        const response = await fetch(`https://api.github.com/repos/${usuario}/${repositorio}/contents/${ruta}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          fileList.innerHTML = '';
-          data.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item.name;
-            li.addEventListener('click', () => openFile(item));
-            fileList.appendChild(li);
-          });
-        } else {
-          fileList.innerHTML = 'Error al cargar los archivos.';
-        }
-      } catch (error) {
-        fileList.innerHTML = 'Error al conectar con GitHub.';
-      }
+      files.forEach(file => {
+        const li = document.createElement('li');
+        li.textContent = file.name;
+        li.addEventListener('click', () => openFile(file));
+        fileList.appendChild(li);
+      });
     }
 
     // Abrir archivo en el visor
@@ -250,21 +228,17 @@
       const viewerContent = document.getElementById('viewer-content');
       viewerContent.innerHTML = '';
 
-      if (file.type === 'file') {
-        if (file.name.endsWith('.jpg') || file.name.endsWith('.png') || file.name.endsWith('.jpeg')) {
-          const img = document.createElement('img');
-          img.src = file.download_url;
-          viewerContent.appendChild(img);
-        } else if (file.name.endsWith('.mp4') || file.name.endsWith('.webm')) {
-          const video = document.createElement('video');
-          video.src = file.download_url;
-          video.controls = true;
-          viewerContent.appendChild(video);
-        } else {
-          viewerContent.textContent = 'Tipo de archivo no compatible.';
-        }
-      } else if (file.type === 'dir') {
-        viewerContent.textContent = 'Selecciona un archivo, no un directorio.';
+      if (file.type === 'image') {
+        const img = document.createElement('img');
+        img.src = `https://tu-usuario.github.io/mi-repositorio/dir/${file.name}`;
+        viewerContent.appendChild(img);
+      } else if (file.type === 'video') {
+        const video = document.createElement('video');
+        video.src = `https://tu-usuario.github.io/mi-repositorio/dir/${file.name}`;
+        video.controls = true;
+        viewerContent.appendChild(video);
+      } else {
+        viewerContent.textContent = 'Tipo de archivo no compatible.';
       }
     }
 
@@ -274,5 +248,7 @@
       window.location.reload();
     }
   </script>
+</body>
+</html>
 </body>
 </html>
